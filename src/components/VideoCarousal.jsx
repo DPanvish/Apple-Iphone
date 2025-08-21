@@ -1,8 +1,13 @@
 import React from 'react'
+import { highlightsSlides } from '../constants'
 
 const VideoCarousal = () => {
   return (
-    <div>VideoCarousal</div>
+    <>
+      <div className="flex items-center">
+        {/* {highlightsSlides} */}
+      </div>
+    </>
   )
 }
 
