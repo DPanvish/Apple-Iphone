@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { highlightsSlides } from '../constants'
+import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { pauseImg, playImg, replayImg } from '../utils';
 
@@ -21,6 +22,22 @@ const VideoCarousal = () => {
 
   const {isEnd, isLastVideo, startPlay, videoId, isPlaying} = video; 
 
+  useGSAP(() => {
+    gsap.to("#video", {
+      scrollTrigger: {
+        trigger: "#video",
+        toggleActions: "restart none none none",
+      },
+      onComplete: () => {
+        setVideo((prevVideo) => ({
+          ...prevVideo,
+          startPlay: true,
+          isPlaying: true,
+        }))
+      }
+    })
+  }, [isEnd, videoId])
+
   useEffect(() => {
     if(loadedData.length > 3){
       if(!isPlaying){
@@ -31,19 +48,61 @@ const VideoCarousal = () => {
     }
   }, [startPlay, videoId, isPlaying, loadedData])
 
+  const handleLoadedMetadata = (idx, e) => setLoadedData((prevVideo) => [...prevVideo, e])
+
   useEffect(() => {
-    const currentProgress = 0;
+    let currentProgress = 0;
     let span = videoSpanRef.current;
 
     if(span[videoId]){
       // Animate the progress bar.
 
       let anim = gsap.to(span[videoId], {
-        onUpdate: () => {},
-        onColplete: () => {},
-      })
-    }
+        onUpdate: () => {
+          const progress = Math.ceil(anim.progress() * 100);
 
+          if(progress != currentProgress){
+            currentProgress = progress;
+            gsap.to(videoDivRef.current[videoId], {
+              width: window.innerWidth < 760
+                ? "10vw"
+                : window.innerWidth < 1200
+                  ? "10vw"
+                  : "4vw"
+            })
+
+            gsap.to(span[videoId], {
+              widht: `${currentProgress}%`,
+              backgroundColor: "white"
+            })
+          }
+        },
+        onColplete: () => {
+          if(isPlaying){
+            gsap.to(videoDivRef.current[videoId], {
+              width: "12px"
+            })
+            gsap.to(span[videoId], {
+              backgroundColor: "#afafaf"
+            })
+          }
+        },
+      })
+
+      if(videoId == 0){
+        anim.restart();
+      }
+
+      const animUpdate = () => {
+        anim.progress(videoRef.current[videoId] / highlightsSlides[videoId].videoDuration)
+      }
+  
+      if(isPlaying){
+        gsap.ticker.add(animUpdate);
+      }else{
+        gsap.ticker.remove(animUpdate);
+      }
+    }
   }, [videoId, startPlay])
 
   const handleProcess = (type, i) => {
@@ -83,11 +142,17 @@ const VideoCarousal = () => {
                   preload="auto"
                   muted
                   ref={(el) => (videoRef.current[idx] = el)}
+                  onEnded={() => (
+                    idx !== 3
+                      ? handleProcess("video-end", idx)
+                      : handleProcess("video-last")
+                  )}
                   onPlay={() => {
                     setVideo((prevVideo) => ({
                       ...prevVideo, isPlaying
                     }))
                   }}
+                  onLoadedMetadata={(e) => handleLoadedMetadata(idx, e)}
                 >
                   <source src={list.video} type="video/mp4" />
                 </video>
