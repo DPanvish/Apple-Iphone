@@ -3,6 +3,7 @@ import Lights from "./Lights"
 import IPhone from "./IPhone"
 import { Suspense } from "react"
 import * as THREE from "three"
+import LoadingModel from "./LoadingModel"
 
 
 const ModelView = ({index, groupRef, gsapType, controlRef, setRotationState, size, item}) => {
@@ -23,17 +24,6 @@ const ModelView = ({index, groupRef, gsapType, controlRef, setRotationState, siz
       {/* Lights for lighting the scene */}
       <Lights />
 
-      {/* Controls for rotating and zooming in/out of the scene */}
-      <OrbitControls 
-        makeDefault
-        ref={controlRef}
-        enableZoom={false}
-        enablePan={false}
-        rotateSpeed={0.4}
-        target={new THREE.Vector3(0, 0, 0)}
-        onEnd={() => setRotationState(controlRef.current.getAzimuthalAngle())}
-      />
-
       {/* 
         Group Ref is used to rotate the phone 
         and it's children elements.
@@ -42,7 +32,19 @@ const ModelView = ({index, groupRef, gsapType, controlRef, setRotationState, siz
       */}
       <group ref={groupRef} name={`${index === 1} ? small : large`} position={[0, 0, 0]}>
         {/* Suspense is used to load the model asynchronously */}
-        <Suspense fallback={<Html><div>Loading...</div></Html>}>
+        <Suspense fallback={<LoadingModel duration={3} />}> {/* increase to 3s per loop; adjust as needed */}
+
+          {/* Controls for rotating and zooming in/out of the scene (only after model loads) */}
+          <OrbitControls 
+            makeDefault
+            ref={controlRef}
+            enableZoom={false}
+            enablePan={false}
+            rotateSpeed={0.4}
+            target={new THREE.Vector3(0, 0, 0)}
+            onEnd={() => setRotationState(controlRef.current.getAzimuthalAngle())}
+          />
+
           <IPhone 
             scale={index === 1 ? [15, 15, 15] : [17, 17, 17]}
             item={item}
