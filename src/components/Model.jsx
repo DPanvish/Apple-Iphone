@@ -1,12 +1,13 @@
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import ModelView from './ModelView'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { yellowImg } from '../utils'
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber'
 import { View } from '@react-three/drei'
 import { models, sizes } from '../constants'
+import { animateWithGsapTimeline } from '../utils/animations'
 
 
 const Model = () => {
@@ -29,6 +30,22 @@ const Model = () => {
   // rotation
   const [smallRotation, setSmallRotation] = useState(0);
   const [largeRotation, setLargeRotation] = useState(0);
+
+  // A timeline is a powerful tool for creating complex animations and interactions with GSAP. 
+  // It allows you to organize your animations into a sequence or timeline, making it easier to manage and control them collectively.
+  const timeLine = gsap.timeline();
+
+  useEffect(() => {
+    // if small then convert to large
+    if(size === "small"){
+      animateWithGsapTimeline(timeLine, large, largeRotation, "#view2", "#view1", {transform: "translateX(0)", duration: 2});
+    }
+
+    // if large then convert to small
+    if(size ===  "large"){
+      animateWithGsapTimeline(timeLine, small, smallRotation, "#view1", "#view2", {transform: "translateX(-100%", duration: 2});
+    }
+  })
 
   useGSAP(() => {
     gsap.to("#heading",{
